@@ -410,6 +410,8 @@ CsrIdentifyAlertableThread:
 --------------------------------------------------------------------------
 after: TrHook(&__imp_CsrIdentifyAlertableThread, hook_CsrIdentifyAlertableThread);
 --------------------------------------------------------------------------
+CsrIdentifyAlertableThread:
+00007FFAB20BE480  jmp hook_CsrIdentifyAlertableThread
 
 trampoline:
 00007FFA3225F7F8  xor         eax,eax 
