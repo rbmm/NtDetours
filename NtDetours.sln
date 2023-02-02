@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "detour", "detour\detour.vcxproj", "{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}.Release|x64.ActiveCfg = Release|x64
+		{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}.Release|x64.Build.0 = Release|x64
+		{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}.Release|x86.ActiveCfg = Release|Win32
+		{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		    SolutionGuid = {B2E0885A-64E4-426D-91DC-53B356E0E26C}
+		SolutionGuid = {D7684DAB-BC3D-4B43-8021-258985B1EAEF}
+	EndGlobalSection
+EndGlobal
