@@ -101,11 +101,11 @@ loop:
 				goto loop;
 			}
 
-			status = STATUS_NO_MEMORY;
-
-			if (ThreadInfo* next = new ThreadInfo(tbi.ClientId.UniqueThread))
+			if (0 <= (status = ZwSuspendThread(hThread, 0)))
 			{
-				if (0 <= (status = ZwSuspendThread(hThread, 0)))
+				status = STATUS_NO_MEMORY;
+
+				if (ThreadInfo* next = new ThreadInfo(tbi.ClientId.UniqueThread))
 				{
 					if (0 <= (status = ZwGetContextThread(hThread, next)))
 					{
@@ -115,11 +115,17 @@ loop:
 						goto loop;
 					}
 
-					ZwResumeThread(hThread, 0);
+					delete next;
 				}
 
-				delete next;
+				ZwResumeThread(hThread, 0);
 			}
+		}
+
+		if (status == STATUS_THREAD_IS_TERMINATING)
+		{
+			bClose = TRUE;
+			goto loop;
 		}
 
 		NtClose(hThread);
