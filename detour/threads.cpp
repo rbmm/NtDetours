@@ -153,8 +153,6 @@ loop:
 #error
 #endif
 
-#include "threads.h"
-
 BOOLEAN MovePc(_In_ ThreadInfo* pti, _In_ ULONG_PTR PcFrom, _In_ ULONG_PTR PcTo, _In_ ULONG cb, _In_ DTA* Lens)
 {
 	BOOLEAN fOk = FALSE;

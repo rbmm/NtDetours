@@ -15,7 +15,7 @@
     <ProjectGuid>{9CD908E6-3DCA-40C4-9299-D81AD0B88E0D}</ProjectGuid>
     <RootNamespace>detour</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <UserRootDir>$(SolutionDir)MSBuild\v4.0</UserRootDir>
+    <UserRootDir>$(SolutionDir)..\MSBuild\v4.0</UserRootDir>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

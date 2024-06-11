@@ -8,7 +8,7 @@
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 
-#include "../inc/StdAfx.h"
+#include "../../lib/inc/StdAfx.h"
 
 // TODO: reference additional headers your program requires here
 #pragma init_seg(lib)
