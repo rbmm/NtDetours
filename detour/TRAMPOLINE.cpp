@@ -128,8 +128,51 @@ Z_DETOUR_TRAMPOLINE* Z_DETOUR_REGION::alloc()
 
 #ifdef _WIN64
 
+PVOID InitEx()
+{
+	union {
+		UNICODE_STRING DllName;
+		ANSI_STRING FunctionName;
+	};
+
+	RtlInitUnicodeString(&DllName, L"ntdll.dll");
+
+	union {
+		PVOID pv;
+		HMODULE hmod; 
+	};
+
+	if (0 <= LdrGetDllHandle(0, 0, &DllName, &hmod))
+	{
+		RtlInitString(&FunctionName, "ZwAllocateVirtualMemoryEx");
+
+		if (0 <= LdrGetProcedureAddress(hmod, &FunctionName, 0, &pv))
+		{
+			return pv;
+		}
+	}
+
+	return 0;
+}
+
+PVOID __imp_ZwAllocateVirtualMemoryEx = InitEx();
+
 void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 {
+	SIZE_T RegionSize = gAllocationGranularity;
+
+	if (__imp_ZwAllocateVirtualMemoryEx)
+	{
+		PVOID BaseAddress = 0;
+
+		MEM_ADDRESS_REQUIREMENTS mar = { (PVOID)min, (PVOID)max };
+		MEM_EXTENDED_PARAMETER mep = {
+			{ MemExtendedParameterAddressRequirements }, { (ULONG64)&mar }
+		};
+		return 0 > ZwAllocateVirtualMemoryEx(NtCurrentProcess(), &BaseAddress, &RegionSize, 
+			MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE, &mep, 1) ? 0 : BaseAddress;
+	}
+
 	ULONG_PTR addr, add = gAllocationGranularity - 1, mask = ~add;
 
 	MEMORY_BASIC_INFORMATION mbi; 
@@ -146,7 +189,6 @@ void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 
 			if (addr < min && gAllocationGranularity <= (min - addr))
 			{
-				SIZE_T RegionSize = gAllocationGranularity;
 
 				switch (NtAllocateVirtualMemory(NtCurrentProcess(), (void**)&addr, 0, 
 					&RegionSize, MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE))
@@ -171,7 +213,7 @@ void ExpandRange(ULONG_PTR a, ULONG_PTR b, ULONG_PTR& min, ULONG_PTR& max)
 {
 	ULONG_PTR add = Z_DETOUR_REGION::gAllocationGranularity - 1, mask = ~add, _a, _b;
 
-	_b = (a + 0x80000000) & mask;
+	_b = ((a + 0x80000000) & mask) - 1;
 	_a = (b + add - 0x80000000) & mask;
 
 	min = b < _a ? 0 : _a;
