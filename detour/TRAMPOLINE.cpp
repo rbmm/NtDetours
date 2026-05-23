@@ -30,7 +30,7 @@ class Z_DETOUR_REGION
 	LONG dwRef;
 	Z_DETOUR_TRAMPOLINE first[];
 
-	static Z_DETOUR_REGION* spRegion;
+	inline static Z_DETOUR_REGION* spRegion;
 
 	~Z_DETOUR_REGION();
 
@@ -69,19 +69,18 @@ class Z_DETOUR_REGION
 
 	static void _free(Z_DETOUR_TRAMPOLINE* pTramp);
 
-	static ULONG GetAllocationGranularity()
+	static ULONG GetAllocationGranularity(PULONG_PTR pMaximumUserModeAddress)
 	{
 		SYSTEM_BASIC_INFORMATION sbi;
 		if (0 > NtQuerySystemInformation(SystemBasicInformation, &sbi, sizeof(sbi), 0)) __debugbreak();
+		*pMaximumUserModeAddress = sbi.MaximumUserModeAddress;
 		return sbi.AllocationGranularity;
 	}
 
 public:
-	static ULONG gAllocationGranularity;
+	inline static ULONG_PTR MaximumUserModeAddress;
+	inline static ULONG AllocationGranularity = GetAllocationGranularity(&MaximumUserModeAddress);
 };
-
-Z_DETOUR_REGION* Z_DETOUR_REGION::spRegion = 0;
-ULONG Z_DETOUR_REGION::gAllocationGranularity = Z_DETOUR_REGION::GetAllocationGranularity();
 
 Z_DETOUR_REGION::~Z_DETOUR_REGION()
 {
@@ -101,7 +100,7 @@ Z_DETOUR_REGION::Z_DETOUR_REGION() : first{}
 
 	next = spRegion, spRegion = this;
 
-	ULONG n = (gAllocationGranularity - sizeof(Z_DETOUR_REGION)) / sizeof(Z_DETOUR_TRAMPOLINE);
+	ULONG n = (AllocationGranularity - sizeof(Z_DETOUR_REGION)) / sizeof(Z_DETOUR_TRAMPOLINE);
 
 	Z_DETOUR_TRAMPOLINE* Next = first, *Prev = 0;
 	do 
@@ -159,7 +158,12 @@ PVOID __imp_ZwAllocateVirtualMemoryEx = InitEx();
 
 void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 {
-	SIZE_T RegionSize = gAllocationGranularity;
+	SIZE_T RegionSize = AllocationGranularity;
+
+	if (MaximumUserModeAddress < max)
+	{
+		max = MaximumUserModeAddress;
+	}
 
 	if (__imp_ZwAllocateVirtualMemoryEx)
 	{
@@ -173,7 +177,7 @@ void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 			MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE, &mep, 1) ? 0 : BaseAddress;
 	}
 
-	ULONG_PTR addr, add = gAllocationGranularity - 1, mask = ~add;
+	ULONG_PTR addr, add = AllocationGranularity - 1, mask = ~add;
 
 	MEMORY_BASIC_INFORMATION mbi; 
 	do 
@@ -187,7 +191,7 @@ void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 		{
 			addr = ((UINT_PTR)mbi.BaseAddress + add) & mask;
 
-			if (addr < min && gAllocationGranularity <= (min - addr))
+			if (addr < min && AllocationGranularity <= (min - addr))
 			{
 
 				switch (NtAllocateVirtualMemory(NtCurrentProcess(), (void**)&addr, 0, 
@@ -211,7 +215,7 @@ void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 
 void ExpandRange(ULONG_PTR a, ULONG_PTR b, ULONG_PTR& min, ULONG_PTR& max)
 {
-	ULONG_PTR add = Z_DETOUR_REGION::gAllocationGranularity - 1, mask = ~add, _a, _b;
+	ULONG_PTR add = Z_DETOUR_REGION::AllocationGranularity - 1, mask = ~add, _a, _b;
 
 	_b = ((a + 0x80000000) & mask) - 1;
 	_a = (b + add - 0x80000000) & mask;
@@ -280,7 +284,7 @@ void Z_DETOUR_REGION::_free(Z_DETOUR_TRAMPOLINE* pTramp)
 	{
 		do 
 		{
-			if ((ULONG_PTR)pTramp - (ULONG_PTR)pRegion < gAllocationGranularity)
+			if ((ULONG_PTR)pTramp - (ULONG_PTR)pRegion < AllocationGranularity)
 			{
 				pRegion->free(pTramp);
 
