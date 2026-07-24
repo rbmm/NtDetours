@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "LDasm.h"
 _NT_BEGIN
+
 #include <ntintsafe.h>
 
 #include "threads.h"
@@ -154,7 +155,9 @@ PVOID InitEx()
 	return 0;
 }
 
-PVOID __imp_ZwAllocateVirtualMemoryEx = InitEx();
+EXTERN_C {
+	PVOID __imp_ZwAllocateVirtualMemoryEx = InitEx();
+}
 
 void* Z_DETOUR_REGION::operator new(size_t, ULONG_PTR min, ULONG_PTR max)
 {
